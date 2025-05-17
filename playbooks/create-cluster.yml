@@ -179,6 +179,7 @@
     - name: Join Kubernetes cluster
       ansible.builtin.shell: "{{ hostvars['localhost']['join_command'] }}"
       when: hostvars['localhost']['join_command'] is defined
+      ignore_errors: yes
 
 - name: Install Flannel CNI
   hosts: control_plane
@@ -205,3 +206,18 @@
         kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
       args:
         executable: /bin/bash
+- name: Config Kubectl
+  hosts: control_plane
+  gather_facts: yes
+  become: yes
+  user: root
+  tasks:
+    - name: Copy admin kubeconfig to root's home
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: ~/cluster-config
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+    
